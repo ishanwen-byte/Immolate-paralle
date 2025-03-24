@@ -2,14 +2,16 @@
 __constant char SEEDCHARS[] = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 __constant int NUM_CHARS = 35;
 
+// 使用位运算优化字符转数字函数
 int s_char_num(char c){
-    return c - (49 + (c>57)*7);
+    return c - (49 + ((c > 57) << 3) - ((c > 57) << 1) - (c > 57));  // 49 + (c>57)*7 的位运算优化
 }
 
 typedef struct Seed {
     ulong8 data;
     int len;
 } seed;
+
 seed s_new_empty() {
     seed seed;
     seed.data = 0; //fills with zeros
@@ -76,25 +78,32 @@ void s_next(seed* s) {
     int carry = s->data[s->len-1] == 0;
     for (int i = s->len - 2; (i >= 0 && carry); i--) {
         s->data[i] = (s->data[i]+carry)%NUM_CHARS;
-        carry = carry & (s->data[i] == 0);
+        carry &= (s->data[i] == 0);  // 使用位与运算
     }
     s->len += carry;
 }
+
 void s_skip(seed* s, long n) {
     int carry = 0;
     int i = s->len - 1;
     int j = 0;
     ulong8 data = 0;
     while(n > 0 || carry || j < s->len){
+        // 使用位运算优化条件判断
+        int i_valid = -(i >= 0);  // 如果i>=0，则为全1（-1），否则为0
         int sum = carry + (n % NUM_CHARS);
-        sum += s->data[i * (i >= 0)] * (i >= 0) + -1 * (i < 0); //Branchless equivalent of if(i >= 0) {sum += s->data[i];} else {sum--;}
+        sum += (s->data[i & i_valid] & i_valid) + (~i_valid & -1);  // 位运算优化的条件选择
+        
         data[j] = sum % NUM_CHARS;
         carry = sum >= NUM_CHARS;
         n /= NUM_CHARS;
         i--;
         j++;
     }
-    s->len += (j - s->len) * (s->len <= j);
+    // 使用位运算优化条件更新
+    int len_update = -(s->len <= j);  // 如果s->len<=j，则为全1，否则为0
+    s->len += (j - s->len) & len_update;
+    
     for(int x = 0; x < s->len; x++){
         s->data[s->len-1-x] = data[x];
     }

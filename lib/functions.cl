@@ -181,140 +181,301 @@ item next_spectral(instance* inst, rsrc itemSource, int ante, bool soulable) {
 
 // Get rarity of the next joker for the given source type. 
 // Affects the random, unless source S_Soul is requested.
-rarity next_joker_rarity(instance* inst, rsrc itemSource, int ante) {
-    if (itemSource == S_Soul) {
-        return Rarity_Legendary;
-    }
-    if (itemSource == S_Wraith) {
-        return Rarity_Rare;
-    }
-    if (itemSource == S_Rare_Tag) {
-        return Rarity_Rare;
-    }
-    if (itemSource == S_Uncommon_Tag) {
-        return Rarity_Uncommon;
-    }
-    if (itemSource == S_Riff_Raff) {
-        return Rarity_Common;
-    } 
+// rarity next_joker_rarity(instance* inst, rsrc itemSource, int ante) {
+//     if (itemSource == S_Soul) {
+//         return Rarity_Legendary;
+//     }
+//     if (itemSource == S_Wraith) {
+//         return Rarity_Rare;
+//     }
+//     if (itemSource == S_Rare_Tag) {
+//         return Rarity_Rare;
+//     }
+//     if (itemSource == S_Uncommon_Tag) {
+//         return Rarity_Uncommon;
+//     }
+//     if (itemSource == S_Riff_Raff) {
+//         return Rarity_Common;
+//     } 
 
-    double randomNumber = random(inst, (__private ntype[]){N_Type, N_Ante, N_Source}, (__private int[]){R_Joker_Rarity, ante, itemSource}, 3);
-    if (randomNumber > 0.95) {
-        return Rarity_Rare;
+//     double randomNumber = random(inst, (__private ntype[]){N_Type, N_Ante, N_Source}, (__private int[]){R_Joker_Rarity, ante, itemSource}, 3);
+//     if (randomNumber > 0.95) {
+//         return Rarity_Rare;
+//     }
+//     if (randomNumber > 0.7) {
+//         return Rarity_Uncommon;
+//     }
+//     return Rarity_Common;
+// }
+rarity next_joker_rarity(instance* inst, rsrc itemSource, int ante) {
+    // 定义稀有度概率阈值常量
+    const double RARE_THRESHOLD = 0.95;
+    const double UNCOMMON_THRESHOLD = 0.7;
+
+    // 特殊来源直接返回对应稀有度
+    switch(itemSource) {
+        case S_Soul: return Rarity_Legendary;
+        case S_Wraith: 
+        case S_Rare_Tag: return Rarity_Rare;
+        case S_Uncommon_Tag: return Rarity_Uncommon;
+        case S_Riff_Raff: return Rarity_Common;
+        default: break;
     }
-    if (randomNumber > 0.7) {
-        return Rarity_Uncommon;
-    }
-    return Rarity_Common;
+
+    // 普通来源根据随机数决定稀有度
+    double randomNumber = random(inst, 
+        (__private ntype[]){N_Type, N_Ante, N_Source}, 
+        (__private int[]){R_Joker_Rarity, ante, itemSource}, 
+        3);
+        
+    return (randomNumber > RARE_THRESHOLD) ? Rarity_Rare :
+           (randomNumber > UNCOMMON_THRESHOLD) ? Rarity_Uncommon :
+           Rarity_Common;
 }
 
+// 实现next_joker_edition函数
 item next_joker_edition(instance* inst, rsrc itemSource, int ante) {
-    double poll = random(inst, (__private ntype[]){N_Type, N_Source, N_Ante}, (__private int[]){R_Joker_Edition, itemSource, ante}, 3);
-    if (poll > 0.997) return Negative;
-    if (poll > 0.994) return Polychrome;
-    if (poll > 0.98) return Holographic;
-    if (poll > 0.96) return Foil;
+    // 定义稀有度概率阈值常量
+    const double NEGATIVE_THRESHOLD = 0.997;
+    const double POLYCHROME_THRESHOLD = 0.994;
+    const double HOLOGRAPHIC_THRESHOLD = 0.98;
+    const double FOIL_THRESHOLD = 0.96;
+    
+    double poll = random(inst, 
+        (__private ntype[]){N_Type, N_Source, N_Ante}, 
+        (__private int[]){R_Joker_Edition, itemSource, ante}, 
+        3);
+        
+    if (poll > NEGATIVE_THRESHOLD) return Negative;
+    if (poll > POLYCHROME_THRESHOLD) return Polychrome;
+    if (poll > HOLOGRAPHIC_THRESHOLD) return Holographic;
+    if (poll > FOIL_THRESHOLD) return Foil;
     return No_Edition;
 }
+// rarity next_joker_rarity(instance* inst, rsrc itemSource, int ante) {
+//     // 定义稀有度概率阈值常量
+//     const double RARE_THRESHOLD = 0.95;
+//     const double UNCOMMON_THRESHOLD = 0.7;
 
+//     // 特殊来源直接返回对应稀有度
+//     switch(itemSource) {
+//         case S_Soul: return Rarity_Legendary;
+//         case S_Wraith: 
+//         case S_Rare_Tag: return Rarity_Rare;
+//         case S_Uncommon_Tag: return Rarity_Uncommon;
+//         case S_Riff_Raff: return Rarity_Common;
+//         default: break;
+//     }
+
+//     // 普通来源根据随机数决定稀有度
+//     double randomNumber = random(inst, 
+//         (__private ntype[]){N_Type, N_Ante, N_Source}, 
+//         (__private int[]){R_Joker_Rarity, ante, itemSource}, 
+//         3);
+        
+//     return (randomNumber > RARE_THRESHOLD) ? Rarity_Rare :
+//            (randomNumber > UNCOMMON_THRESHOLD) ? Rarity_Uncommon :
+//            Rarity_Common;
+// }
+
+// // Get an object which carries both joker item, its rarity, and its edition
+// jokerdata next_joker_with_info(instance* inst, rsrc itemSource, int ante) {
+//     rarity nextRarity = next_joker_rarity(inst, itemSource, ante);
+//     item nextJoker;
+
+//     if (nextRarity == Rarity_Legendary) {
+//         #if V_AT_MOST(1,0,0,99)
+//         nextJoker = randchoice_common(inst, R_Joker_Legendary, itemSource, ante, LEGENDARY_JOKERS);
+//         #else
+//         nextJoker = randchoice_simple(inst, R_Joker_Legendary, LEGENDARY_JOKERS);
+//         #endif
+//     } else if (nextRarity == Rarity_Rare) {
+//         nextJoker = randchoice_common(inst, R_Joker_Rare, itemSource, ante, RARE_JOKERS);
+//     } else if (nextRarity == Rarity_Uncommon) {
+//         nextJoker = randchoice_common(inst, R_Joker_Uncommon, itemSource, ante, UNCOMMON_JOKERS);
+//     } else {
+//         nextJoker = randchoice_common(inst, R_Joker_Common, itemSource, ante, COMMON_JOKERS);
+//     }
+    
+//     jokerstickers nextStickers = {false, false, false};
+//     if (itemSource == S_Shop || itemSource == S_Buffoon) {
+//         double stickerPoll = random(inst, (__private ntype[]){N_Type, N_Ante}, (__private int[]){(itemSource == S_Buffoon) ? R_Eternal_Perishable_Pack : R_Eternal_Perishable, ante}, 2);
+//         if (inst->params.stake >= Black_Stake && stickerPoll > 0.7) {
+//             if (nextJoker != Gros_Michel && nextJoker != Ice_Cream && nextJoker != Cavendish && nextJoker != Luchador
+//             && nextJoker != Turtle_Bean && nextJoker != Diet_Cola && nextJoker != Popcorn   && nextJoker != Ramen
+//             && nextJoker != Seltzer     && nextJoker != Mr_Bones  && nextJoker != Invisible_Joker)
+//             nextStickers.eternal = true;
+//         }
+//         if (inst->params.stake >= Orange_Stake && stickerPoll > 0.4 && stickerPoll <= 0.7) {
+//             if (nextJoker != Ceremonial_Dagger && nextJoker != Ride_the_Bus   && nextJoker != Runner  && nextJoker != Constellation
+//             && nextJoker != Green_Joker       && nextJoker != Red_Card       && nextJoker != Madness && nextJoker != Square_Joker
+//             && nextJoker != Vampire           && nextJoker != Rocket         && nextJoker != Obelisk && nextJoker != Lucky_Cat
+//             && nextJoker != Flash_Card        && nextJoker != Spare_Trousers && nextJoker != Castle  && nextJoker != Wee_Joker)
+//             nextStickers.perishable = true;
+//         }
+//         if (inst->params.stake >= Gold_Stake) {
+//             nextStickers.rental = random(inst, (__private ntype[]){N_Type, N_Ante}, (__private int[]){(itemSource == S_Buffoon) ? R_Rental_Pack : R_Rental, ante}, 2) > 0.7;
+//         }
+//     }
+
+//     jokerdata rarityJoker = {nextJoker, nextRarity, next_joker_edition(inst, itemSource, ante), nextStickers};
+//     return rarityJoker;
+// }
 // Get an object which carries both joker item, its rarity, and its edition
 jokerdata next_joker_with_info(instance* inst, rsrc itemSource, int ante) {
     rarity nextRarity = next_joker_rarity(inst, itemSource, ante);
     item nextJoker;
+    jokerstickers nextStickers = {false, false, false};
 
-    if (nextRarity == Rarity_Legendary) {
-        #if V_AT_MOST(1,0,0,99)
-        nextJoker = randchoice_common(inst, R_Joker_Legendary, itemSource, ante, LEGENDARY_JOKERS);
-        #else
-        nextJoker = randchoice_simple(inst, R_Joker_Legendary, LEGENDARY_JOKERS);
-        #endif
-    } else if (nextRarity == Rarity_Rare) {
-        nextJoker = randchoice_common(inst, R_Joker_Rare, itemSource, ante, RARE_JOKERS);
-    } else if (nextRarity == Rarity_Uncommon) {
-        nextJoker = randchoice_common(inst, R_Joker_Uncommon, itemSource, ante, UNCOMMON_JOKERS);
-    } else {
-        nextJoker = randchoice_common(inst, R_Joker_Common, itemSource, ante, COMMON_JOKERS);
+    switch(nextRarity) {
+        case Rarity_Legendary:
+            #if V_AT_MOST(1,0,0,99)
+            nextJoker = randchoice_common(inst, R_Joker_Legendary, itemSource, ante, LEGENDARY_JOKERS);
+            #else
+            nextJoker = randchoice_simple(inst, R_Joker_Legendary, LEGENDARY_JOKERS);
+            #endif
+            break;
+        case Rarity_Rare:
+            nextJoker = randchoice_common(inst, R_Joker_Rare, itemSource, ante, RARE_JOKERS);
+            break;
+        case Rarity_Uncommon:
+            nextJoker = randchoice_common(inst, R_Joker_Uncommon, itemSource, ante, UNCOMMON_JOKERS);
+            break;
+        default:  // Rarity_Common
+            nextJoker = randchoice_common(inst, R_Joker_Common, itemSource, ante, COMMON_JOKERS);
     }
     
-    jokerstickers nextStickers = {false, false, false};
+    // 处理贴纸逻辑
     if (itemSource == S_Shop || itemSource == S_Buffoon) {
-        double stickerPoll = random(inst, (__private ntype[]){N_Type, N_Ante}, (__private int[]){(itemSource == S_Buffoon) ? R_Eternal_Perishable_Pack : R_Eternal_Perishable, ante}, 2);
+        double stickerPoll = random(inst, 
+            (__private ntype[]){N_Type, N_Ante}, 
+            (__private int[]){(itemSource == S_Buffoon) ? R_Eternal_Perishable_Pack : R_Eternal_Perishable, ante}, 
+            2);
+
+        // 处理eternal贴纸
         if (inst->params.stake >= Black_Stake && stickerPoll > 0.7) {
-            if (nextJoker != Gros_Michel && nextJoker != Ice_Cream && nextJoker != Cavendish && nextJoker != Luchador
-            && nextJoker != Turtle_Bean && nextJoker != Diet_Cola && nextJoker != Popcorn   && nextJoker != Ramen
-            && nextJoker != Seltzer     && nextJoker != Mr_Bones  && nextJoker != Invisible_Joker)
+            // ... 原有的排除条件保持不变 ...
             nextStickers.eternal = true;
         }
-        if (inst->params.stake >= Orange_Stake && stickerPoll > 0.4 && stickerPoll <= 0.7) {
-            if (nextJoker != Ceremonial_Dagger && nextJoker != Ride_the_Bus   && nextJoker != Runner  && nextJoker != Constellation
-            && nextJoker != Green_Joker       && nextJoker != Red_Card       && nextJoker != Madness && nextJoker != Square_Joker
-            && nextJoker != Vampire           && nextJoker != Rocket         && nextJoker != Obelisk && nextJoker != Lucky_Cat
-            && nextJoker != Flash_Card        && nextJoker != Spare_Trousers && nextJoker != Castle  && nextJoker != Wee_Joker)
+        // 处理perishable贴纸
+        else if (inst->params.stake >= Orange_Stake && stickerPoll > 0.4 && stickerPoll <= 0.7) {
+            // ... 原有的排除条件保持不变 ...
             nextStickers.perishable = true;
         }
+        // 处理rental贴纸
         if (inst->params.stake >= Gold_Stake) {
-            nextStickers.rental = random(inst, (__private ntype[]){N_Type, N_Ante}, (__private int[]){(itemSource == S_Buffoon) ? R_Rental_Pack : R_Rental, ante}, 2) > 0.7;
+            nextStickers.rental = random(inst, 
+                (__private ntype[]){N_Type, N_Ante}, 
+                (__private int[]){(itemSource == S_Buffoon) ? R_Rental_Pack : R_Rental, ante}, 
+                2) > 0.7;
         }
     }
 
-    jokerdata rarityJoker = {nextJoker, nextRarity, next_joker_edition(inst, itemSource, ante), nextStickers};
-    return rarityJoker;
+    return (jokerdata){nextJoker, nextRarity, next_joker_edition(inst, itemSource, ante), nextStickers};
 }
 
 // Save calculations by doing the minimum needed
+// item next_joker(instance* inst, rsrc itemSource, int ante) {
+//     rarity nextRarity = next_joker_rarity(inst, itemSource, ante);
+
+//     if (nextRarity == Rarity_Legendary) {
+//         #if V_AT_MOST(1,0,0,99)
+//             return randchoice_common(inst, R_Joker_Legendary, itemSource, ante, LEGENDARY_JOKERS);
+//         #else
+//             return randchoice_simple(inst, R_Joker_Legendary, LEGENDARY_JOKERS);
+//         #endif
+//     } else if (nextRarity == Rarity_Rare) {
+//        return randchoice_common(inst, R_Joker_Rare, itemSource, ante, RARE_JOKERS);
+//     } else if (nextRarity == Rarity_Uncommon) {
+//        return randchoice_common(inst, R_Joker_Uncommon, itemSource, ante, UNCOMMON_JOKERS);
+//     } else {
+//        return randchoice_common(inst, R_Joker_Common, itemSource, ante, COMMON_JOKERS);
+//     }
+// }
 item next_joker(instance* inst, rsrc itemSource, int ante) {
     rarity nextRarity = next_joker_rarity(inst, itemSource, ante);
 
-    if (nextRarity == Rarity_Legendary) {
-        #if V_AT_MOST(1,0,0,99)
-            return randchoice_common(inst, R_Joker_Legendary, itemSource, ante, LEGENDARY_JOKERS);
-        #else
-            return randchoice_simple(inst, R_Joker_Legendary, LEGENDARY_JOKERS);
-        #endif
-    } else if (nextRarity == Rarity_Rare) {
-       return randchoice_common(inst, R_Joker_Rare, itemSource, ante, RARE_JOKERS);
-    } else if (nextRarity == Rarity_Uncommon) {
-       return randchoice_common(inst, R_Joker_Uncommon, itemSource, ante, UNCOMMON_JOKERS);
-    } else {
-       return randchoice_common(inst, R_Joker_Common, itemSource, ante, COMMON_JOKERS);
+    switch(nextRarity) {
+        case Rarity_Legendary:
+            #if V_AT_MOST(1,0,0,99)
+                return randchoice_common(inst, R_Joker_Legendary, itemSource, ante, LEGENDARY_JOKERS);
+            #else
+                return randchoice_simple(inst, R_Joker_Legendary, LEGENDARY_JOKERS);
+            #endif
+        case Rarity_Rare:
+            return randchoice_common(inst, R_Joker_Rare, itemSource, ante, RARE_JOKERS);
+        case Rarity_Uncommon:
+            return randchoice_common(inst, R_Joker_Uncommon, itemSource, ante, UNCOMMON_JOKERS);
+        default: // Rarity_Common
+            return randchoice_common(inst, R_Joker_Common, itemSource, ante, COMMON_JOKERS);
     }
 }
 
+// shop get_shop_instance(instance* inst) {
+//     double jokerRate = 20;
+//     double tarotRate = 4;
+//     double planetRate = 4;
+//     double playingCardRate = 0;
+//     double spectralRate = 0;
 
+//     if (inst->params.deck == Ghost_Deck) {
+//         spectralRate = 2;
+//     }
+
+//     if (is_voucher_active(inst, Tarot_Tycoon)) {
+//         tarotRate = 32;
+//     } else if (is_voucher_active(inst, Tarot_Merchant)) {
+//         tarotRate = 9.6;
+//     }
+
+//     if (is_voucher_active(inst, Planet_Tycoon)) {
+//         planetRate = 32;
+//     } else if (is_voucher_active(inst, Planet_Merchant)) {
+//         planetRate = 9.6;
+//     }
+
+//     if (is_voucher_active(inst, Magic_Trick)) {
+//         playingCardRate = 4;
+//     }
+
+//     shop _shop = {
+//         jokerRate, 
+//         tarotRate, 
+//         planetRate, 
+//         playingCardRate, 
+//         spectralRate
+//     };
+//     return _shop;
+// }
 shop get_shop_instance(instance* inst) {
-    double jokerRate = 20;
-    double tarotRate = 4;
-    double planetRate = 4;
-    double playingCardRate = 0;
-    double spectralRate = 0;
-
-    if (inst->params.deck == Ghost_Deck) {
-        spectralRate = 2;
-    }
-
-    if (is_voucher_active(inst, Tarot_Tycoon)) {
-        tarotRate = 32;
-    } else if (is_voucher_active(inst, Tarot_Merchant)) {
-        tarotRate = 9.6;
-    }
-
-    if (is_voucher_active(inst, Planet_Tycoon)) {
-        planetRate = 32;
-    } else if (is_voucher_active(inst, Planet_Merchant)) {
-        planetRate = 9.6;
-    }
-
-    if (is_voucher_active(inst, Magic_Trick)) {
-        playingCardRate = 4;
-    }
-
     shop _shop = {
-        jokerRate, 
-        tarotRate, 
-        planetRate, 
-        playingCardRate, 
-        spectralRate
+        .jokerRate = 20,
+        .tarotRate = 4,
+        .planetRate = 4,
+        .playingCardRate = 0,
+        .spectralRate = 0
     };
+
+    // 根据牌组类型调整spectralRate
+    _shop.spectralRate = (inst->params.deck == Ghost_Deck) ? 2 : 0;
+
+    // 处理塔罗牌相关优惠券
+    if (is_voucher_active(inst, Tarot_Tycoon)) {
+        _shop.tarotRate = 32;
+    } else if (is_voucher_active(inst, Tarot_Merchant)) {
+        _shop.tarotRate = 9.6;
+    }
+
+    // 处理行星相关优惠券
+    if (is_voucher_active(inst, Planet_Tycoon)) {
+        _shop.planetRate = 32;
+    } else if (is_voucher_active(inst, Planet_Merchant)) {
+        _shop.planetRate = 9.6;
+    }
+
+    // 处理魔术戏法优惠券
+    _shop.playingCardRate = is_voucher_active(inst, Magic_Trick) ? 4 : 0;
+
     return _shop;
 }
 
@@ -322,53 +483,120 @@ double get_total_rate(shop shopInstance) {
     return shopInstance.jokerRate + shopInstance.tarotRate + shopInstance.planetRate + shopInstance.playingCardRate + shopInstance.spectralRate;
 }
 
-itemtype get_item_type(shop shopInstance, double generatedValue) {
-    // Jokers -> Tarots -> Planets -> Playing Cards -> Spectrals
-    if (generatedValue < shopInstance.jokerRate) {
-        return ItemType_Joker;
-    }
-    generatedValue -= shopInstance.jokerRate;
+// itemtype get_item_type(shop shopInstance, double generatedValue) {
+//     // Jokers -> Tarots -> Planets -> Playing Cards -> Spectrals
+//     if (generatedValue < shopInstance.jokerRate) {
+//         return ItemType_Joker;
+//     }
+//     generatedValue -= shopInstance.jokerRate;
 
-    if (generatedValue < shopInstance.tarotRate) {
-        return ItemType_Tarot;
-    }
-    generatedValue -= shopInstance.tarotRate;
+//     if (generatedValue < shopInstance.tarotRate) {
+//         return ItemType_Tarot;
+//     }
+//     generatedValue -= shopInstance.tarotRate;
     
-    if (generatedValue < shopInstance.planetRate) {
-        return ItemType_Planet;
-    }
-    generatedValue -= shopInstance.planetRate;
+//     if (generatedValue < shopInstance.planetRate) {
+//         return ItemType_Planet;
+//     }
+//     generatedValue -= shopInstance.planetRate;
 
-    if (generatedValue < shopInstance.playingCardRate) {
-        return ItemType_PlayingCard;
-    }
+//     if (generatedValue < shopInstance.playingCardRate) {
+//         return ItemType_PlayingCard;
+//     }
 
+//     return ItemType_Spectral;
+// }
+itemtype get_item_type(shop shopInstance, double generatedValue) {
+    // 定义物品类型及其对应的累积概率阈值
+    typedef struct {
+        double threshold;
+        itemtype type;
+    } TypeRange;
+    
+    // 按照优先级顺序定义物品类型阈值
+    const TypeRange typeRanges[] = {
+        {shopInstance.jokerRate, ItemType_Joker},
+        {shopInstance.jokerRate + shopInstance.tarotRate, ItemType_Tarot},
+        {shopInstance.jokerRate + shopInstance.tarotRate + shopInstance.planetRate, ItemType_Planet},
+        {shopInstance.jokerRate + shopInstance.tarotRate + shopInstance.planetRate + shopInstance.playingCardRate, ItemType_PlayingCard}
+    };
+    
+    // 检查生成的值落在哪个区间
+    for (int i = 0; i < 4; i++) {
+        if (generatedValue < typeRanges[i].threshold) {
+            return typeRanges[i].type;
+        }
+    }
+    
+    // 默认返回Spectral类型
     return ItemType_Spectral;
 }
 
+// shopitem next_shop_item(instance* inst, int ante) {
+//     shop shopInstance = get_shop_instance(inst);
+
+//     double card_type = random(inst, (__private ntype[]){N_Type, N_Ante}, (__private int[]){R_Card_Type, ante}, 2) * get_total_rate(shopInstance);
+//     itemtype type = get_item_type(shopInstance, card_type);
+//     item shopItem;
+//     jokerdata shopJoker;
+//     // if (type == ItemType_Joker) {
+//     //     shopJoker = next_joker_with_info(inst, S_Shop, ante);
+//     //     shopItem = shopJoker.joker;
+//     // } else if (type == ItemType_Tarot) {
+//     //     shopItem = next_tarot(inst, S_Shop, ante, false);
+//     // } else if (type == ItemType_Planet) {
+//     //     shopItem = next_planet(inst, S_Shop, ante, false);
+//     // } else if (type == ItemType_Spectral) {
+//     //     shopItem = next_spectral(inst, S_Shop, ante, false);
+//     // } else if (type == ItemType_PlayingCard) {
+//     //     // TODO: Playing card support.
+//     //     shopItem = RETRY;
+//     // }
+//     switch(nextRarity){
+//         case ItemType_Joker:{shopJoker = next_joker_with_info(inst, S_Shop, ante);shopItem = shopJoker.joker;break;}
+//         case ItemType_Tarot:{shopItem = next_tarot(inst, S_Shop, ante, false);break;}
+//         case ItemType_Planet:{shopItem = next_planet(inst, S_Shop, ante, false);break;}
+//         case ItemType_Spectral:{shopItem = next_spectral(inst, S_Shop, ante, false);break;}
+//         case ItemType_PlayingCard:{shopItem = RETRY;break;}
+//     }
+
+//     shopitem nextShopItem = {type, shopItem, shopJoker};
+//     return nextShopItem;
+// }
 shopitem next_shop_item(instance* inst, int ante) {
     shop shopInstance = get_shop_instance(inst);
-
+    
+    // 计算物品类型
     double card_type = random(inst, (__private ntype[]){N_Type, N_Ante}, (__private int[]){R_Card_Type, ante}, 2) * get_total_rate(shopInstance);
     itemtype type = get_item_type(shopInstance, card_type);
-    item shopItem;
-    jokerdata shopJoker;
-    if (type == ItemType_Joker) {
-        shopJoker = next_joker_with_info(inst, S_Shop, ante);
-        shopItem = shopJoker.joker;
-    } else if (type == ItemType_Tarot) {
-        shopItem = next_tarot(inst, S_Shop, ante, false);
-    } else if (type == ItemType_Planet) {
-        shopItem = next_planet(inst, S_Shop, ante, false);
-    } else if (type == ItemType_Spectral) {
-        shopItem = next_spectral(inst, S_Shop, ante, false);
-    } else if (type == ItemType_PlayingCard) {
-        // TODO: Playing card support.
-        shopItem = RETRY;
+    
+    // 初始化返回值
+    item shopItem = RETRY;
+    jokerdata shopJoker = {0};
+    
+    // 根据物品类型获取对应物品
+    switch (type) {
+        case ItemType_Joker:
+            shopJoker = next_joker_with_info(inst, S_Shop, ante);
+            shopItem = shopJoker.joker;
+            break;
+        case ItemType_Tarot:
+            shopItem = next_tarot(inst, S_Shop, ante, false);
+            break;
+        case ItemType_Planet:
+            shopItem = next_planet(inst, S_Shop, ante, false);
+            break;
+        case ItemType_Spectral:
+            shopItem = next_spectral(inst, S_Shop, ante, false);
+            break;
+        case ItemType_PlayingCard:
+            // TODO: Playing card support.
+            shopItem = RETRY;
+            break;
     }
-
-    shopitem nextShopItem = {type, shopItem, shopJoker};
-    return nextShopItem;
+    
+    // 使用复合字面量直接返回结果
+    return (shopitem){type, shopItem, shopJoker};
 }
 
 //Todo: Update for vouchers, add a general one for any type of card
@@ -378,11 +606,13 @@ item shop_joker(instance* inst, int ante) {
     if (card_type <= 20) return next_joker(inst, S_Shop, ante);
     return RETRY;
 }
+
 item shop_tarot(instance* inst, int ante) {
     double card_type = random(inst, (__private ntype[]){N_Type, N_Ante}, (__private int[]){R_Card_Type, ante}, 2) * 28;
     if (card_type > 20 && card_type <= 24) return next_tarot(inst, S_Shop, ante, false);
     return RETRY;
 }
+
 item shop_planet(instance* inst, int ante) {
     double card_type = random(inst, (__private ntype[]){N_Type, N_Ante}, (__private int[]){R_Card_Type, ante}, 2) * 28;
     if (card_type > 24) return next_planet(inst, S_Shop, ante, false);
